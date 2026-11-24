@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Faltam 3 Dias! • RAYONNE &amp; CAROLLINA • 27/11/2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Mantém bordas de pixel art nítidas sem suavização */
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top, #1f1b2e 0%, #0b0b10 75%);
+            font-family: 'Press Start 2P', monospace;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Moldura vertical 9:16 otimizada para Stories e Reels */
+        #phone-frame {
+            position: relative;
+            width: 100vw;
+            height: 100dvh;
+            max-width: calc(100dvh * 9 / 16);
+            max-height: 100dvh;
+            background: #5c94fc;
+            box-shadow: 0 0 0 4px #181822, 0 24px 60px rgba(0, 0, 0, 0.85);
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        .retro-panel {
+            background: #fffdf7;
+            border: 4px solid #141418;
+            box-shadow:
+                inset -4px -4px 0 #dcd4be,
+                inset 4px 4px 0 #ffffff,
+                0 6px 0 #141418;
+            color: #141418;
+        }
+
+        .retro-btn {
+            border: 3px solid #141418;
+            box-shadow:
+                inset -3px -3px 0 rgba(0, 0, 0, 0.28),
+                inset 3px 3px 0 rgba(255, 255, 255, 0.35),
+                0 4px 0 #141418;
+            transition: transform 0.07s ease;
+            cursor: pointer;
+        }
+
+        .retro-btn:active {
+            transform: translateY(3px);
+            box-shadow:
+                inset -2px -2px 0 rgba(0, 0, 0, 0.28),
+                0 1px 0 #141418;
+        }
+    </style>
+</head>
+<body>
+    <div id="phone-frame">
+        <!-- Canvas principal 9:16 com resolução lógica fixa -->
+        <canvas id="gameCanvas" width="270" height="480"></canvas>
+
+        <!-- Controles superiores (Som e Configurações) -->
+        <div id="top-hud" class="absolute top-3 right-3 z-30 flex items-center gap-2 transition-opacity duration-300">
+            <button id="soundToggleBtn" type="button" aria-label="Som"
+                class="retro-btn w-10 h-10 bg-[#fffdf7] text-[#141418] text-xs flex items-center justify-center">
+                🔊
+            </button>
+            <button id="settingsBtn" type="button" aria-label="Configurações"
+                class="retro-btn w-10 h-10 bg-[#ffd524] text-[#141418] text-xs flex items-center justify-center">
+                ⚙️
+            </button>
+        </div>
+
+        <!-- Tela Inicial -->
+        <div id="startScreen" class="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 bg-black/45">
+            <div class="retro-panel w-full max-w-[340px] p-4 text-center space-y-3">
+                <div class="inline-block bg-[#e52521] text-white border-2 border-[#141418] px-2.5 py-1 text-[8px]">
+                    FASE ESPECIAL • 27/11/2026
+                </div>
+
+                <h1 id="startCoupleTitle" class="text-sm sm:text-base text-[#141418] leading-snug break-words">
+                    RAYONNE &amp; CAROLLINA
+                </h1>
+
+                <!-- Prévia de Rayonne e Carollina -->
+                <div class="flex items-center justify-center gap-3 py-2 bg-[#8bb8ff]/35 border-2 border-[#141418]">
+                    <canvas id="previewGroom" width="64" height="84" class="!w-[64px] !h-[84px]"></canvas>
+                    <span class="text-[#ff4da6] text-xs">♥</span>
+                    <canvas id="previewBride" width="72" height="84" class="!w-[72px] !h-[84px]"></canvas>
+                </div>
+
+                <p class="text-[8px] text-[#3a3a46] leading-relaxed">
+                    Caminhe até o mastro e descubra o anúncio final!
+                </p>
+
+                <div class="space-y-2.5 pt-1">
+                    <button id="autoRecordBtn" type="button"
+                        class="retro-btn w-full py-3 px-2 bg-[#43b047] text-white text-[9px] leading-snug"
+                        style="text-shadow: 2px 2px 0 #141418;">
+                        🎬 MODO GRAVAÇÃO (AUTO)
+                    </button>
+
+                    <button id="playModeBtn" type="button"
+                        class="retro-btn w-full py-3 px-2 bg-[#ff69b4] text-[#141418] text-[9px] leading-snug">
+                        🎮 MODO JOGAR
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dica discreta no Modo Jogar -->
+        <div id="playHint" class="hidden absolute bottom-14 inset-x-3 z-10 text-center pointer-events-none">
+            <span class="inline-block bg-[#141418]/85 text-white border-2 border-white px-3 py-1.5 text-[8px]">
+                TOQUE OU ESPAÇO P/ PULAR
+            </span>
+        </div>
+
+        <!-- Cartão Final Limpo no Reencontro -->
+        <div id="finalCard" class="hidden absolute inset-x-4 top-[11%] z-20 flex flex-col items-center pointer-events-none">
+            <div class="retro-panel w-full max-w-[340px] p-4 text-center space-y-2.5">
+                <div id="finalCountdownBadge" class="bg-[#e52521] text-white border-2 border-[#141418] py-2 px-2 text-xs">
+                    FALTAM 3 DIAS!
+                </div>
+
+                <div id="finalNamesBox" class="bg-[#ffd524] text-[#141418] border-2 border-[#141418] py-2.5 px-2 text-sm leading-snug break-words">
+                    RAYONNE &amp; CAROLLINA
+                </div>
+
+                <div id="finalDateBox" class="inline-block bg-[#ffb3d9] text-[#141418] border-2 border-[#141418] px-3 py-1 text-[9px]">
+                    27/11/2026
+                </div>
+
+                <p id="finalMessage" class="text-[8px] text-[#141418] leading-relaxed pt-0.5">
+                    O grande dia tá chegando, prepara os corações!
+                </p>
+            </div>
+
+            <button id="replayBtn" type="button"
+                class="hidden pointer-events-auto retro-btn mt-4 px-3 py-2 bg-[#141418] text-white text-[8px]">
+                ↻ REPETIR
+            </button>
+        </div>
+
+        <!-- Modal de Configurações -->
+        <div id="settingsModal" class="hidden absolute inset-0 z-40 flex items-center justify-center p-3 bg-black/75">
+            <div class="retro-panel w-full max-w-[340px] p-4 space-y-2.5 max-h-[92dvh] overflow-y-auto">
+                <div class="flex items-center justify-between border-b-2 border-[#141418]/20 pb-2">
+                    <span class="text-[10px]">⚙️ CONFIGURAÇÕES</span>
+                    <button id="closeSettingsBtn" type="button" class="text-xs text-[#e52521] px-1.5 py-0.5">✕</button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-left">
+                    <div>
+                        <label class="block text-[7px] mb-1">NOIVO</label>
+                        <input id="groomInput" type="text" maxlength="14" value="RAYONNE"
+                            class="w-full p-2 text-[8px] border-2 border-[#141418] bg-white uppercase focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[7px] mb-1">NOIVA</label>
+                        <input id="brideInput" type="text" maxlength="14" value="CAROLLINA"
+                            class="w-full p-2 text-[8px] border-2 border-[#141418] bg-white uppercase focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-left">
+                    <div>
+                        <label class="block text-[7px] mb-1">DATA</label>
+                        <input id="dateInput" type="text" maxlength="16" value="27/11/2026"
+                            class="w-full p-2 text-[8px] border-2 border-[#141418] bg-white uppercase focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[7px] mb-1">ANÚNCIO FINAL</label>
+                        <input id="countdownInput" type="text" maxlength="18" value="FALTAM 3 DIAS!"
+                            class="w-full p-2 text-[8px] border-2 border-[#141418] bg-white uppercase focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="text-left">
+                    <label class="block text-[7px] mb-1">MENSAGEM FINAL</label>
+                    <input id="messageInput" type="text" maxlength="56" value="O grande dia tá chegando, prepara os corações!"
+                        class="w-full p-2 text-[8px] border-2 border-[#141418] bg-white focus:outline-none">
+                </div>
+
+                <div class="text-left">
+                    <label class="block text-[7px] mb-1">TRAJE DO RAYONNE</label>
+                    <select id="outfitSelect" class="w-full p-2 text-[8px] border-2 border-[#141418] bg-white focus:outline-none">
+                        <option value="suit">Terno Rubro-Negro (Preto e Vermelho)</option>
+                        <option value="jersey">Camisa do Flamengo (Listras Rubro-Negras)</option>
+                    </select>
+                </div>
+
+                <div class="text-left">
+                    <label class="block text-[7px] mb-1">CENÁRIO</label>
+                    <select id="themeSelect" class="w-full p-2 text-[8px] border-2 border-[#141418] bg-white focus:outline-none">
+                        <option value="classic">Dia Clássico</option>
+                        <option value="sunset">Pôr do Sol Rosa &amp; Vermelho</option>
+                        <option value="night">Noite Estrelada</option>
+                    </select>
+                </div>
+
+                <button id="saveSettingsBtn" type="button"
+                    class="retro-btn w-full py-2.5 bg-[#43b047] text-white text-[9px]"
+                    style="text-shadow: 2px 2px 0 #141418;">
+                    SALVAR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ====================================================================
+         * 1. ÁUDIO 8-BIT VIA WEB AUDIO API
+         * ====================================================================
+         */
+        class Sound8Bit {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            ensureContext() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) {
+                        this.ctx = new AudioCtx();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume().catch(() => {});
+                }
+            }
+
+            tone(freq, duration, type = 'square', gainVal = 0.065, delay = 0) {
+                if (this.muted) return;
+                this.ensureContext();
+                if (!this.ctx) return;
+
+                try {
+                    const start = this.ctx.currentTime + delay;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, start);
+
+                    gain.gain.setValueAtTime(gainVal, start);
+                    gain.gain.exponentialRampToValueAtTime(0.0008, start + duration);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(start);
+                    osc.stop(start + duration);
+                } catch (_) {}
+            }
+
+            jump() {
+                if (this.muted) return;
+                this.ensureContext();
+                if (!this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(590, now + 0.15);
+                    gain.gain.setValueAtTime(0.065, now);
+                    gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.16);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.16);
+                } catch (_) {}
+            }
+
+            collect() {
+                this.tone(987.77, 0.08, 'square', 0.065, 0);
+                this.tone(1318.51, 0.2, 'square', 0.065, 0.07);
+            }
+
+            blockHit() {
+                this.tone(150, 0.08, 'triangle', 0.09, 0);
+            }
+
+            flagRise() {
+                const notes = [
+                    { f: 392.00, d: 0.11, t: 0.00 },
+                    { f: 523.25, d: 0.11, t: 0.12 },
+                    { f: 659.25, d: 0.11, t: 0.24 },
+                    { f: 783.99, d: 0.22, t: 0.36 },
+                    { f: 659.25, d: 0.12, t: 0.60 },
+                    { f: 783.99, d: 0.36, t: 0.74 }
+                ];
+                notes.forEach(n => {
+                    this.tone(n.f, n.d, 'square', 0.07, n.t);
+                    this.tone(n.f * 0.5, n.d, 'triangle', 0.07, n.t);
+                });
+            }
+
+            weddingTune() {
+                const notes = [
+                    { f: 523.25, d: 0.25, t: 0.00 },
+                    { f: 698.46, d: 0.17, t: 0.27 },
+                    { f: 698.46, d: 0.14, t: 0.46 },
+                    { f: 698.46, d: 0.42, t: 0.62 },
+                    { f: 523.25, d: 0.25, t: 1.10 },
+                    { f: 783.99, d: 0.17, t: 1.37 },
+                    { f: 659.25, d: 0.16, t: 1.56 },
+                    { f: 698.46, d: 0.48, t: 1.74 }
+                ];
+                notes.forEach(n => {
+                    this.tone(n.f, n.d, 'square', 0.065, n.t);
+                    this.tone(n.f * 0.5, n.d, 'triangle', 0.065, n.t);
+                });
+            }
+
+            firework() {
+                this.tone(240, 0.06, 'sawtooth', 0.04, 0);
+                this.tone(880, 0.13, 'square', 0.035, 0.05);
+            }
+        }
+
+        const sound = new Sound8Bit();
+
+        /**
+         * ====================================================================
+         * 2. SPRITES PIXELADOS PROPORCIONAIS E NÍTIDOS
+         * ====================================================================
+         */
+        const COLOR_MAP = {
+            '.': null,
+            'K': '#141418', // Contorno preto e óculos finos
+            'R': '#e52521', // Vermelho Flamengo
+            'W': '#ffffff', // Branco (camisa, véu, bola)
+            'C': '#bfefff', // Reflexo sutil nas lentes dos óculos
+            'S': '#ffcc99', // Pele
+            'H': '#3a2210', // Cabelo castanho escuro
+            'B': '#20222c', // Terno / calça escura
+            'G': '#ffd426', // Dourado (coroa / aliança)
+            'P': '#ff5ca8', // Rosa vibrante (vestido)
+            'M': '#ffa8d2', // Rosa claro (babados / véu / flores)
+            'D': '#d42477', // Rosa escuro (detalhes do vestido)
+            'V': '#3ca842'  // Verde (folhas / casco)
+        };
+
+        const GROOM_SUIT_STAND = [
+            ".....HHHHHH.....",
+            "....HHHHHHHH....",
+            "....HSSSSSSH....",
+            "....KKSKKSSK....",
+            "....KCKKKKCK....",
+            "....SSSSSSSS....",
+            "....BBWWWWBB....",
+            "...BBWRRRRWBB...",
+            "...BBWRKKRWBB...",
+            "..SSBBBRKBBBSS..",
+            "..SS.BBBBBB.SS..",
+            ".....BBBBBB.....",
+            ".....BBBBBB.....",
+            ".....BBB.BBB....",
+            ".....BBB.BBB....",
+            ".....BBB.BBB....",
+            "....RRRR.RRRR...",
+            "....KKKK.KKKK...",
+            "................",
+            "................"
+        ];
+
+        const GROOM_SUIT_STEP_A = [
+            ".....HHHHHH.....",
+            "....HHHHHHHH....",
+            "....HSSSSSSH....",
+            "....KKSKKSSK....",
+            "....KCKKKKCK....",
+            "....SSSSSSSS....",
+            "....BBWWWWBB....",
+            "...BBWRRRRWBB...",
+            "...BBWRKKRWBB...",
+            "...SSBBBRKBBSS..",
+            ".....BBBBBB.....",
+            ".....BBBBBB.....",
+            ".....BBBBBB.....",
+            "....BBB...BBB...",
+            "...BBB.....BBB..",
+            "..RRRR.....KKKK.",
+            "..KKKK..........",
+            "................",
+            "................",
+            "................"
+        ];
+
+        const GROOM_SUIT_STEP_B = [
+            ".....HHHHHH.....",
+            "....HHHHHHHH....",
+            "....HSSSSSSH....",
+            "....KKSKKSSK....",
+            "....KCKKKKCK....",
+            "....SSSSSSSS....",
+            "....BBWWWWBB....",
+            "...BBWRRRRWBB...",
+            "...BBWRKKRWBB...",
+            "...SSBBBRKBBSS..",
+            ".....BBBBBB.....",
+            ".....BBBBBB.....",
+            ".....BBBBBB.....",
+            ".....BBB.BBB....",
+            ".....BBB..BBB...",
+            ".....KKKK..RRRR.",
+            "...........KKKK.",
+            "................",
+            "................",
+            "................"
+        ];
+
+        const GROOM_SUIT_JUMP = [
+            ".....HHHHHH.SS..",
+            "....HHHHHHHHSS..",
+            "....HSSSSSSHRR..",
+            "....KKSKKSSK....",
+            "....KCKKKKCK....",
+            "....SSSSSSSS....",
+            "...BBBBWWBBBB...",
+            "..SSBBWRRRRWBB..",
+            "..SSBBWRKKRWBB..",
+            ".....BBBRKBBB...",
+            ".....BBBBBB.....",
+            ".....BBBBBB.....",
+            "....BBB...BBB...",
+            "...RRRR...KKKK..",
+            "...KKKK.........",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................"
+        ];
+
+        const GROOM_JERSEY_STAND = [
+            ".....HHHHHH.....",
+            "....HHHHHHHH....",
+            "....HSSSSSSH....",
+            "....KKSKKSSK....",
+            "....KCKKKKCK....",
+            "....SSSSSSSS....",
+            "....RRRRRRRR....",
+            "...KWRRRRRRRK...",
+            "...KKKKKKKKKK...",
+            "..SSRRRRRRRRSS..",
+            "..SSKKKKKKKKSS..",
+            "....RRRRRRRR....",
+            "....KKKKKKKK....",
+            "....BBB..BBB....",
+            "....BBB..BBB....",
+            "....BBB..BBB....",
+            "...RRRR..RRRR...",
+            "...BBBB..BBBB...",
+            "................",
+            "................"
+        ];
+
+        const GROOM_JERSEY_STEP_A = [
+            ".....HHHHHH.....",
+            "....HHHHHHHH....",
+            "....HSSSSSSH....",
+            "....KKSKKSSK....",
+            "....KCKKKKCK....",
+            "....SSSSSSSS....",
+            "....RRRRRRRR....",
+            "...KWRRRRRRRK...",
+            "...KKKKKKKKKK...",
+            "...SSRRRRRRRSS..",
+            "....KKKKKKKK....",
+            "....RRRRRRRR....",
+            "....KKKKKKKK....",
+            "...BBB....BBB...",
+            "..BBB......BBB..",
+            "..RRRR.....BBBB.",
+            "..BBBB..........",
+            "................",
+            "................",
+            "................"
+        ];
+
+        const GROOM_JERSEY_STEP_B = [
+            ".....HHHHHH.....",
+            "....HHHHHHHH....",
+            "....HSSSSSSH....",
+            "....KKSKKSSK....",
+            "....KCKKKKCK....",
+            "....SSSSSSSS....",
+            "....RRRRRRRR....",
+            "...KWRRRRRRRK...",
+            "...KKKKKKKKKK...",
+            "...SSRRRRRRRSS..",
+            "....KKKKKKKK....",
+            "....RRRRRRRR....",
+            "....KKKKKKKK....",
+            "....BBB..BBB....",
+            "....BBB...BBB...",
+            "....BBBB..RRRR..",
+            "..........BBBB..",
+            "................",
+            "................",
+            "................"
+        ];
+
+        const GROOM_JERSEY_JUMP = [
+            ".....HHHHHH.SS..",
+            "....HHHHHHHHSS..",
+            "....HSSSSSSHRR..",
+            "....KKSKKSSK....",
+            "....KCKKKKCK....",
+            "....SSSSSSSS....",
+            "...RRRRRRRRRR...",
+            "..SSKWRRRRRRRK..",
+            "..SSKKKKKKKKKK..",
+            "....RRRRRRRR....",
+            "....KKKKKKKK....",
+            "....RRRRRRRR....",
+            "...BBB....BBB...",
+            "...RRRR...BBBB..",
+            "...BBBB.........",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................"
+        ];
+
+        const BRIDE_SPRITE_A = [
+            "......GGGGGG......",
+            ".....HHHHHHHH.....",
+            "....MMHHHHHHMM....",
+            "...MMMHSSSSSHMMM..",
+            "...MMMHKSKSKHMMM..",
+            "...MMM.SSSSSS.MMM.",
+            "...MMM..PPPP..MMM.",
+            "...MMMSMPPPPMMSMM.",
+            "...MMMSMPPPPMVPMM.",
+            "....MM.MPPPPMMPMV.",
+            "....MPPPPPPPPM.VV.",
+            "...MPPPPPPPPPPM...",
+            "..MPPMMMMMMMPPM...",
+            "..PPPPMMMMMMMPPP..",
+            ".MPPPPPPPPPPPPPPM.",
+            ".MPPPDDDDDDDDPPPM.",
+            ".DDMMMMMMMMMMMMDD.",
+            "...PP........PP...",
+            "...MM........MM...",
+            ".................."
+        ];
+
+        const PINK_HEART = [
+            ".PP...PP.",
+            "PPPP.PPPP",
+            "PMMPPPPPP",
+            "PMPPPDDDD",
+            ".PPPDDDD.",
+            "..PPDDD..",
+            "...PDD...",
+            "....D...."
+        ];
+
+        const FLA_HEART = [
+            ".RR...RR.",
+            "RRRR.RRRR",
+            "KKKKKKKKK",
+            "RRRRRRRRR",
+            ".KKKKKKK.",
+            "..RRRRR..",
+            "...KKK...",
+            "....R...."
+        ];
+
+        const GOLD_RING = [
+            "...CC...",
+            "..CWWC..",
+            "...CC...",
+            "..GGGG..",
+            ".GG..GG.",
+            "GG....GG",
+            "GG....GG",
+            ".GG..GG.",
+            "..GGGG.."
+        ];
+
+        const SOCCER_BALL = [
+            "..KKKK..",
+            ".KWWWWK.",
+            "KWKKWWWK",
+            "KWKKWWWK",
+            "KWWWWKKK",
+            "KWWWWKKK",
+            ".KWWWWK.",
+            "..KKKK.."
+        ];
+
+        const KOOPA_A = [
+            "....GGGG....",
+            "...GGGGGG...",
+            "...KKSSKK...",
+            "...KWSKWK...",
+            "...SSSSSS...",
+            "..VVVVVVVV..",
+            ".VVVVVVVVVV.",
+            "VVVVVVVVVVVV",
+            "VVVVVVVVVVVV",
+            ".VVVVVVVVVV.",
+            "..VVVVVVVV..",
+            "...SS..SS...",
+            "..KKK..KKK..",
+            "............",
+            "............",
+            "............"
+        ];
+
+        const KOOPA_B = [
+            "....GGGG....",
+            "...GGGGGG...",
+            "...KKSSKK...",
+            "...KWSKWK...",
+            "...SSSSSS...",
+            "..VVVVVVVV..",
+            ".VVVVVVVVVV.",
+            "VVVVVVVVVVVV",
+            "VVVVVVVVVVVV",
+            ".VVVVVVVVVV.",
+            "..VVVVVVVV..",
+            "....SS..SS..",
+            "....KKK..KKK",
+            "............",
+            "............",
+            "............"
+        ];
+
+        const BIRD_UP = [
+            "........WW",
+            ".......WWW",
+            "..KK..WWWW",
+            ".KKKKWWWW.",
+            "KKKKKKKK..",
+            ".KKKKKK...",
+            "..KKKK...."
+        ];
+
+        const BIRD_DOWN = [
+            "..........",
+            "..KK......",
+            ".KKKK..WW.",
+            "KKKKKKKKWW",
+            ".KKKKKKWWW",
+            "..KKKK.WW.",
+            "...KK....."
+        ];
+
+        function drawPixelMatrix(targetCtx, matrix, x, y, scale, mirrorX = false) {
+            targetCtx.save();
+            targetCtx.imageSmoothingEnabled = false;
+            targetCtx.shadowBlur = 0;
+            targetCtx.shadowOffsetX = 0;
+            targetCtx.shadowOffsetY = 0;
+
+            const rows = matrix.length;
+            const cols = matrix[0].length;
+            const baseX = Math.round(x);
+            const baseY = Math.round(y);
+
+            for (let r = 0; r < rows; r++) {
+                const rowStr = matrix[r];
+                for (let c = 0; c < cols; c++) {
+                    const ch = rowStr[c];
+                    const fill = COLOR_MAP[ch];
+                    if (!fill) continue;
+
+                    const colIndex = mirrorX ? (cols - 1 - c) : c;
+                    targetCtx.fillStyle = fill;
+                    targetCtx.fillRect(
+                        baseX + colIndex * scale,
+                        baseY + r * scale,
+                        scale,
+                        scale
+                    );
+                }
+            }
+            targetCtx.restore();
+        }
+
+        /**
+         * ====================================================================
+         * 3. ESTADO DA FASE E CONFIGURAÇÕES
+         * ====================================================================
+         */
+        const THEMES = {
+            classic: {
+                skyTop: '#5c94fc',
+                skyBottom: '#8bb8ff',
+                hillMain: '#00a800',
+                hillShade: '#007800',
+                groundTop: '#43b047',
+                groundBody: '#c84c0c',
+                groundLine: '#7c2900',
+                cloud: '#ffffff',
+                stars: false
+            },
+            sunset: {
+                skyTop: '#e52521',
+                skyBottom: '#ff85c0',
+                hillMain: '#1e2029',
+                hillShade: '#111217',
+                groundTop: '#ff69b4',
+                groundBody: '#4a1525',
+                groundLine: '#2b0b15',
+                cloud: '#ffe6f2',
+                stars: false
+            },
+            night: {
+                skyTop: '#0b132b',
+                skyBottom: '#1c2541',
+                hillMain: '#1f4068',
+                hillShade: '#162447',
+                groundTop: '#ff69b4',
+                groundBody: '#2b2d42',
+                groundLine: '#1a1b29',
+                cloud: '#ffb3d9',
+                stars: true
+            }
+        };
+
+        const stateConfig = {
+            groom: 'RAYONNE',
+            bride: 'CAROLLINA',
+            coupleTitle: 'RAYONNE & CAROLLINA',
+            date: '27/11/2026',
+            countdown: 'FALTAM 3 DIAS!',
+            message: 'O grande dia tá chegando, prepara os corações!',
+            outfit: 'suit',
+            theme: 'classic',
+            mode: 'auto'
+        };
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+
+        const W = 270;
+        const H = 480;
+        const GROUND_Y = 396;
+        const GRAVITY = 0.44;
+        const JUMP_VY = -9.4;
+        const WALK_VX = 2.7;
+
+        const POLE_X = 1480;
+        const POLE_TOP = 176;
+        const POLE_BOTTOM = GROUND_Y - 40;
+        const ALTAR_X = 1630;
+        const BRIDE_X = 1618;
+
+        let phase = 'title';
+        let tick = 0;
+        let camX = 0;
+        let flagCurrentY = POLE_BOTTOM;
+        let celebrateTicks = 0;
+
+        const groom = {
+            x: 34,
+            y: GROUND_Y - 40,
+            w: 32,
+            h: 40,
+            vx: 0,
+            vy: 0,
+            grounded: true,
+            jumpLock: 0
+        };
+
+        let clouds = [];
+        let hills = [];
+        let stars = [];
+        let blocks = [];
+        let pipes = [];
+        let items = [];
+        let koopas = [];
+        let birds = [];
+        let sparks = [];
+        let popups = [];
+        let rockets = [];
+        let burstLabels = [];
+        let jumpRocketCount = 0;
+
+        function drawPreviews() {
+            const gCanvas = document.getElementById('previewGroom');
+            const bCanvas = document.getElementById('previewBride');
+            if (gCanvas && bCanvas) {
+                const gCtx = gCanvas.getContext('2d');
+                const bCtx = bCanvas.getContext('2d');
+                gCtx.clearRect(0, 0, gCanvas.width, gCanvas.height);
+                bCtx.clearRect(0, 0, bCanvas.width, bCanvas.height);
+
+                const groomSprite = stateConfig.outfit === 'jersey' ? GROOM_JERSEY_STAND : GROOM_SUIT_STAND;
+                drawPixelMatrix(gCtx, groomSprite, 8, 4, 3, false);
+                drawPixelMatrix(bCtx, BRIDE_SPRITE_A, 9, 4, 3, true);
+            }
+        }
+
+        function addSparks(x, y, color, count = 12) {
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count + (i % 3) * 0.25;
+                const speed = 1.2 + ((i * 7) % 10) * 0.24;
+                sparks.push({
+                    x: Math.round(x),
+                    y: Math.round(y),
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 1.1,
+                    color: color,
+                    size: i % 2 === 0 ? 3 : 2,
+                    life: 26 + (i % 5) * 4
+                });
+            }
+        }
+
+        function addPopup(x, y, text, color = '#ffd426') {
+            popups.push({
+                x: Math.round(x),
+                y: Math.round(y),
+                text: text,
+                color: color,
+                life: 48
+            });
+        }
+
+        function buildStage() {
+            tick = 0;
+            camX = 0;
+            flagCurrentY = POLE_BOTTOM;
+            celebrateTicks = 0;
+            jumpRocketCount = 0;
+
+            groom.x = 34;
+            groom.y = GROUND_Y - groom.h;
+            groom.vx = 0;
+            groom.vy = 0;
+            groom.grounded = true;
+            groom.jumpLock = 0;
+
+            blocks = [
+                { x: 235, y: GROUND_Y - 98, kind: 'q', bumped: false, lift: 0, prize: 'ball', tag: 'MENGO!' },
+                { x: 755, y: GROUND_Y - 100, kind: 'q', bumped: false, lift: 0, prize: 'pink_heart', tag: 'AMOR 💖' },
+                { x: 1135, y: GROUND_Y - 98, kind: 'q', bumped: false, lift: 0, prize: 'ring', tag: 'SIM! 💍' }
+            ];
+
+            pipes = [
+                { x: 430, h: 40 },
+                { x: 920, h: 48 },
+                { x: 1320, h: 42 }
+            ];
+
+            koopas = [
+                { x: 355, y: GROUND_Y - 26, w: 20, h: 26, minX: 295, maxX: 415, dir: -1, speed: 0.52, stomped: false, shellVx: 0 },
+                { x: 830, y: GROUND_Y - 26, w: 20, h: 26, minX: 765, maxX: 905, dir: -1, speed: 0.56, stomped: false, shellVx: 0 },
+                { x: 1210, y: GROUND_Y - 26, w: 20, h: 26, minX: 1145, maxX: 1305, dir: -1, speed: 0.58, stomped: false, shellVx: 0 }
+            ];
+
+            birds = [
+                { x: 140, y: 82, speed: 0.45, bobOffset: 0, low: false },
+                { x: 560, y: GROUND_Y - 34, speed: 0.85, bobOffset: 1.2, low: true },
+                { x: 890, y: 76, speed: 0.5, bobOffset: 3.1, low: false },
+                { x: 1280, y: 98, speed: 0.42, bobOffset: 4.5, low: false }
+            ];
+
+            items = [
+                { x: 340, y: GROUND_Y - 60, kind: 'pink_heart', taken: false },
+                { x: 436, y: GROUND_Y - 76, kind: 'soccer', taken: false },
+                { x: 640, y: GROUND_Y - 58, kind: 'fla_heart', taken: false },
+                { x: 926, y: GROUND_Y - 84, kind: 'ring', taken: false },
+                { x: 1235, y: GROUND_Y - 64, kind: 'pink_heart', taken: false }
+            ];
+
+            sparks = [];
+            popups = [];
+            rockets = [];
+            burstLabels = [];
+
+            stars = [];
+            for (let i = 0; i < 55; i++) {
+                stars.push({
+                    x: (i * 37) % 1900,
+                    y: 16 + ((i * 53) % (GROUND_Y - 120)),
+                    size: i % 3 === 0 ? 2 : 1,
+                    phase: i * 0.6
+                });
+            }
+
+            clouds = [];
+            for (let x = 25; x < 1950; x += 150) {
+                clouds.push({
+                    x: x + ((x * 13) % 35),
+                    y: 52 + ((x * 7) % 72),
+                    scale: x % 2 === 0 ? 1.2 : 0.9
+                });
+            }
+
+            hills = [];
+            for (let x = -20; x < 1950; x += 195) {
+                hills.push({
+                    x: x,
+                    w: 95 + (Math.abs(x) % 3) * 24,
+                    h: 44 + (Math.abs(x) % 2) * 26
+                });
+            }
+        }
+
+        function triggerJump(force = JUMP_VY) {
+            if (groom.grounded && groom.jumpLock <= 0) {
+                groom.vy = force;
+                groom.grounded = false;
+                groom.jumpLock = 8;
+                sound.jump();
+                addSparks(groom.x + groom.w / 2, groom.y + groom.h, '#ffffff', 5);
+            }
+        }
+
+        function burstFirework(x, y) {
+            const palette = ['#e52521', '#141418', '#ff5ca8', '#ffa8d2'];
+            const col = palette[tick % palette.length];
+            sound.firework();
+            addSparks(x, y, col, 24);
+        }
+
+        function launchBlockRocket(blockIndex, bx, by) {
+            launchJumpRocket(blockIndex, bx, by);
+        }
+
+        function launchJumpRocket(jumpIndex, originX, originY) {
+            const step = jumpIndex % 3;
+            const startX = originX !== undefined ? originX : groom.x + groom.w / 2;
+            const startY = originY !== undefined ? originY : groom.y - 4;
+            const targetY = Math.max(70, startY - 125);
+
+            let rType = 'vem_ai';
+            let trailColor = '#ffd426';
+            let text = 'VEM AÍ';
+            let textColor = '#ffffff';
+            let badgeBg = '#141418';
+
+            if (step === 1) {
+                rType = 'most_awaited_pink';
+                trailColor = '#ff5ca8';
+                text = 'O CASAMENTO MAIS AGUARDADO';
+                textColor = '#141418';
+                badgeBg = '#ffa8d2';
+            } else if (step === 2) {
+                rType = 'couple_fla_pink';
+                trailColor = '#e52521';
+                text = stateConfig.coupleTitle;
+                textColor = '#ffd426';
+                badgeBg = '#141418';
+            }
+
+            sound.firework();
+            rockets.push({
+                x: startX,
+                y: startY,
+                vy: -5.4,
+                targetY: targetY,
+                rType: rType,
+                trailColor: trailColor,
+                text: text,
+                textColor: textColor,
+                badgeBg: badgeBg
+            });
+        }
+
+        function detonateRocket(rk) {
+            sound.collect();
+            sound.firework();
+
+            if (rk.rType === 'most_awaited_pink') {
+                addSparks(rk.x, rk.y, '#ff5ca8', 24);
+                addSparks(rk.x, rk.y, '#ffa8d2', 18);
+                for (let h = 0; h < 6; h++) {
+                    const ang = (Math.PI * 2 * h) / 6 + 0.2;
+                    sparks.push({
+                        x: Math.round(rk.x),
+                        y: Math.round(rk.y),
+                        vx: Math.cos(ang) * 2.1,
+                        vy: Math.sin(ang) * 2.1 - 0.5,
+                        color: '#ff5ca8',
+                        size: 3,
+                        life: 52,
+                        isPinkHeart: true
+                    });
+                }
+            } else if (rk.rType === 'couple_fla_pink') {
+                addSparks(rk.x, rk.y, '#e52521', 18);
+                addSparks(rk.x, rk.y, '#141418', 16);
+                addSparks(rk.x, rk.y, '#ff5ca8', 18);
+                for (let h = 0; h < 4; h++) {
+                    const ang = (Math.PI * 2 * h) / 4;
+                    sparks.push({
+                        x: Math.round(rk.x),
+                        y: Math.round(rk.y),
+                        vx: Math.cos(ang) * 2.0,
+                        vy: Math.sin(ang) * 2.0 - 0.4,
+                        color: '#ff5ca8',
+                        size: 3,
+                        life: 52,
+                        isPinkHeart: true
+                    });
+                }
+            } else {
+                addSparks(rk.x, rk.y, '#ffd426', 18);
+                addSparks(rk.x, rk.y, '#ff5ca8', 12);
+                addSparks(rk.x, rk.y, '#e52521', 12);
+            }
+
+            burstLabels.push({
+                x: Math.round(rk.x),
+                y: Math.round(rk.y - 6),
+                text: rk.text,
+                textColor: rk.textColor,
+                badgeBg: rk.badgeBg,
+                rType: rk.rType,
+                life: 95,
+                maxLife: 95
+            });
+        }
+
+        function showFinalCard() {
+            document.getElementById('playHint').classList.add('hidden');
+            document.getElementById('finalCountdownBadge').textContent = stateConfig.countdown;
+            document.getElementById('finalNamesBox').textContent = stateConfig.coupleTitle;
+            document.getElementById('finalDateBox').textContent = stateConfig.date;
+            document.getElementById('finalMessage').textContent = stateConfig.message;
+
+            const replayBtn = document.getElementById('replayBtn');
+            replayBtn.classList.remove('hidden');
+            document.getElementById('top-hud').classList.remove('opacity-0', 'pointer-events-none');
+            document.getElementById('finalCard').classList.remove('hidden');
+        }
+
+        /**
+         * ====================================================================
+         * 4. ATUALIZAÇÃO DE FÍSICA E SEQUÊNCIA
+         * ====================================================================
+         */
+        function update() {
+            tick++;
+            if (groom.jumpLock > 0) groom.jumpLock--;
+
+            for (let i = sparks.length - 1; i >= 0; i--) {
+                const s = sparks[i];
+                s.x += s.vx;
+                s.y += s.vy;
+                s.vy += 0.08;
+                s.life--;
+                if (s.life <= 0) sparks.splice(i, 1);
+            }
+
+            for (let i = rockets.length - 1; i >= 0; i--) {
+                const rk = rockets[i];
+                rk.y += rk.vy;
+                rk.vy *= 0.965;
+                if (tick % 2 === 0) {
+                    sparks.push({
+                        x: Math.round(rk.x),
+                        y: Math.round(rk.y + 6),
+                        vx: (((tick % 3) - 1) * 0.4),
+                        vy: 1.2,
+                        color: rk.trailColor,
+                        size: 2,
+                        life: 14
+                    });
+                }
+                if (rk.y <= rk.targetY || rk.vy >= -1.1) {
+                    detonateRocket(rk);
+                    rockets.splice(i, 1);
+                }
+            }
+
+            for (let i = burstLabels.length - 1; i >= 0; i--) {
+                const bl = burstLabels[i];
+                bl.y -= 0.25;
+                bl.life--;
+                if (bl.life <= 0) burstLabels.splice(i, 1);
+            }
+
+            for (let i = popups.length - 1; i >= 0; i--) {
+                const p = popups[i];
+                p.y -= 0.65;
+                p.life--;
+                if (p.life <= 0) popups.splice(i, 1);
+            }
+
+            for (const b of blocks) {
+                if (b.lift > 0) {
+                    b.lift = Math.max(0, b.lift - 0.8);
+                }
+            }
+
+            if (phase === 'title') {
+                camX = (Math.sin(tick * 0.015) + 1) * 16;
+                for (const kp of koopas) {
+                    kp.x += kp.dir * kp.speed;
+                    if (kp.x <= kp.minX) { kp.x = kp.minX; kp.dir = 1; }
+                    if (kp.x >= kp.maxX) { kp.x = kp.maxX; kp.dir = -1; }
+                }
+                for (const bd of birds) {
+                    bd.x -= bd.speed;
+                    if (bd.x < -40) bd.x = POLE_X + 120;
+                }
+                return;
+            }
+
+            if (phase === 'running') {
+                groom.vx = WALK_VX;
+
+                for (const kp of koopas) {
+                    if (kp.stomped) {
+                        kp.x += kp.shellVx;
+                        continue;
+                    }
+                    kp.x += kp.dir * kp.speed;
+                    if (kp.x <= kp.minX) { kp.x = kp.minX; kp.dir = 1; }
+                    if (kp.x >= kp.maxX) { kp.x = kp.maxX; kp.dir = -1; }
+                }
+
+                for (const bd of birds) {
+                    bd.x -= bd.speed;
+                    if (!bd.low && bd.x < -40) bd.x = POLE_X + 140;
+                }
+
+                if (stateConfig.mode === 'auto') {
+                    if (groom.x > 208 && groom.x < 228) triggerJump(-9.2);
+                    if (groom.x > 728 && groom.x < 748) triggerJump(-9.3);
+                    if (groom.x > 1108 && groom.x < 1128) triggerJump(-9.2);
+
+                    for (const kp of koopas) {
+                        if (!kp.stomped && kp.x - groom.x > 16 && kp.x - groom.x < 52) {
+                            triggerJump(-8.8);
+                        }
+                    }
+
+                    for (const bd of birds) {
+                        if (bd.low && bd.x - groom.x > 18 && bd.x - groom.x < 68) {
+                            triggerJump(-9.4);
+                        }
+                    }
+
+                    for (const p of pipes) {
+                        if (groom.x + groom.w > p.x - 38 && groom.x < p.x - 10) {
+                            triggerJump(-9.6);
+                        }
+                    }
+
+                    if (groom.x > POLE_X - 66 && groom.x < POLE_X - 44) {
+                        triggerJump(-10.4);
+                    }
+                }
+
+                groom.x += groom.vx;
+
+                for (const p of pipes) {
+                    const pipeTop = GROUND_Y - p.h;
+                    const pipeW = 30;
+                    if (
+                        groom.x + groom.w > p.x + 2 &&
+                        groom.x < p.x + pipeW - 2 &&
+                        groom.y + groom.h > pipeTop + 4
+                    ) {
+                        if (stateConfig.mode === 'auto') {
+                            groom.y = pipeTop - groom.h;
+                            groom.vy = -6;
+                        } else {
+                            groom.x = p.x + 2 - groom.w;
+                        }
+                    }
+                }
+
+                groom.vy += GRAVITY;
+                groom.y += groom.vy;
+                groom.grounded = false;
+
+                for (const p of pipes) {
+                    const pipeTop = GROUND_Y - p.h;
+                    const pipeW = 30;
+                    if (
+                        groom.vy >= 0 &&
+                        groom.x + groom.w > p.x + 2 &&
+                        groom.x < p.x + pipeW - 2 &&
+                        groom.y + groom.h >= pipeTop &&
+                        groom.y + groom.h - groom.vy <= pipeTop + 8
+                    ) {
+                        groom.y = pipeTop - groom.h;
+                        groom.vy = 0;
+                        groom.grounded = true;
+                    }
+                }
+
+                for (const b of blocks) {
+                    const bw = 22;
+                    const bh = 22;
+                    if (
+                        groom.vy < 0 &&
+                        groom.x + groom.w - 4 > b.x &&
+                        groom.x + 4 < b.x + bw &&
+                        groom.y <= b.y + bh &&
+                        groom.y - groom.vy >= b.y + bh - 6
+                    ) {
+                        groom.y = b.y + bh;
+                        groom.vy = 1.5;
+                        b.lift = 6;
+                        sound.blockHit();
+                        if (!b.bumped) {
+                            b.bumped = true;
+                            if (b.kind === 'q') {
+                                if (phase === 'running') {
+                                    launchBlockRocket(blocks.indexOf(b), b.x + 11, b.y - 4);
+                                }
+                                sound.collect();
+                                const col = b.prize === 'ring' ? '#ffd426' : (b.prize === 'ball' ? '#e52521' : '#ff5ca8');
+                                addSparks(b.x + 11, b.y - 6, col, 14);
+                            }
+                        }
+                    }
+
+                    if (
+                        groom.vy >= 0 &&
+                        groom.x + groom.w - 4 > b.x &&
+                        groom.x + 4 < b.x + bw &&
+                        groom.y + groom.h >= b.y &&
+                        groom.y + groom.h - groom.vy <= b.y + 8
+                    ) {
+                        groom.y = b.y - groom.h;
+                        groom.vy = 0;
+                        groom.grounded = true;
+                    }
+                }
+
+                if (groom.y + groom.h >= GROUND_Y) {
+                    groom.y = GROUND_Y - groom.h;
+                    groom.vy = 0;
+                    groom.grounded = true;
+                }
+
+                for (const kp of koopas) {
+                    if (kp.stomped) continue;
+                    const hitX = groom.x + groom.w - 4 > kp.x && groom.x + 4 < kp.x + kp.w;
+                    const hitY = groom.y + groom.h >= kp.y && groom.y < kp.y + kp.h;
+                    if (hitX && hitY) {
+                        kp.stomped = true;
+                        kp.shellVx = 3.2;
+                        groom.vy = -7.8;
+                        groom.grounded = false;
+                        sound.jump();
+                        addSparks(kp.x + kp.w / 2, kp.y, '#ffd426', 10);
+                        addPopup(kp.x + kp.w / 2, kp.y - 8, '+100', '#ffd426');
+                    }
+                }
+
+                for (const bd of birds) {
+                    if (bd.low) {
+                        const hitX = groom.x + groom.w - 4 > bd.x && groom.x + 4 < bd.x + 16;
+                        const hitY = groom.y + groom.h >= bd.y && groom.y < bd.y + 12;
+                        if (hitX && hitY) {
+                            groom.vy = -7.8;
+                            groom.grounded = false;
+                            sound.jump();
+                            addSparks(bd.x + 8, bd.y, '#ffffff', 8);
+                        }
+                    }
+                }
+
+                for (const it of items) {
+                    if (!it.taken) {
+                        const dx = (groom.x + groom.w / 2) - (it.x + 4);
+                        const dy = (groom.y + groom.h / 2) - (it.y + 4);
+                        if (Math.hypot(dx, dy) < 22) {
+                            it.taken = true;
+                            sound.collect();
+                            const col = it.kind === 'ring' ? '#ffd426' : (it.kind === 'pink_heart' ? '#ff5ca8' : '#e52521');
+                            addSparks(it.x + 4, it.y + 4, col, 10);
+                        }
+                    }
+                }
+
+                if (groom.x + groom.w >= POLE_X - 4) {
+                    groom.x = POLE_X - groom.w + 4;
+                    groom.vx = 0;
+                    groom.vy = 0;
+                    phase = 'flagpole';
+                    sound.flagRise();
+                    addSparks(POLE_X, groom.y + 10, '#ffd426', 16);
+                    addSparks(POLE_X, groom.y + 10, '#ff5ca8', 12);
+                }
+
+                camX = Math.max(0, groom.x - 68);
+            }
+            else if (phase === 'flagpole') {
+                const targetCam = POLE_X - 55;
+                camX += (targetCam - camX) * 0.08;
+
+                if (groom.y + groom.h < GROUND_Y) {
+                    groom.y += 2.2;
+                    if (groom.y + groom.h >= GROUND_Y) {
+                        groom.y = GROUND_Y - groom.h;
+                        groom.grounded = true;
+                    }
+                }
+
+                if (flagCurrentY > POLE_TOP + 6) {
+                    flagCurrentY -= 2.4;
+                    if (tick % 6 === 0) {
+                        addSparks(POLE_X + 35, flagCurrentY + 18, '#ff5ca8', 3);
+                    }
+                } else {
+                    flagCurrentY = POLE_TOP + 6;
+                    if (groom.grounded) {
+                        phase = 'to_altar';
+                        sound.weddingTune();
+                    }
+                }
+            }
+            else if (phase === 'to_altar') {
+                const targetCam = ALTAR_X - 115;
+                camX += (targetCam - camX) * 0.07;
+
+                if (groom.x < BRIDE_X - 32) {
+                    groom.x += 1.5;
+                    groom.grounded = true;
+                } else {
+                    groom.x = BRIDE_X - 32;
+                    groom.y = GROUND_Y - groom.h;
+                    groom.grounded = true;
+                    phase = 'celebrate';
+                    celebrateTicks = 0;
+                    addSparks((groom.x + BRIDE_X) / 2 + 16, groom.y - 16, '#ff5ca8', 18);
+                    addSparks((groom.x + BRIDE_X) / 2 + 16, groom.y - 16, '#e52521', 14);
+                }
+            }
+            else if (phase === 'celebrate') {
+                celebrateTicks++;
+                const targetCam = ALTAR_X - 115;
+                camX += (targetCam - camX) * 0.1;
+
+                if (celebrateTicks % 4 === 0) {
+                    const confCol = ['#ff5ca8', '#ffa8d2', '#e52521', '#141418', '#ffd426'];
+                    sparks.push({
+                        x: ALTAR_X - 65 + ((celebrateTicks * 19) % 140),
+                        y: GROUND_Y - 125,
+                        vx: ((celebrateTicks % 5) - 2) * 0.35,
+                        vy: 0.75 + ((celebrateTicks % 4) * 0.25),
+                        color: confCol[celebrateTicks % confCol.length],
+                        size: 3,
+                        life: 85
+                    });
+                }
+
+                if (celebrateTicks === 15 || celebrateTicks === 48 || celebrateTicks === 85 || celebrateTicks % 95 === 0) {
+                    const fx = camX + 45 + ((celebrateTicks * 37) % Math.max(40, W - 90));
+                    const fy = 70 + ((celebrateTicks * 29) % 105);
+                    burstFirework(fx, fy);
+                }
+
+                if (celebrateTicks === 35) {
+                    showFinalCard();
+                }
+            }
+        }
+
+        /**
+         * ====================================================================
+         * 5. RENDERIZAÇÃO DO CENÁRIO E PERSONAGENS
+         * ====================================================================
+         */
+        function drawCloud(x, y, scale, color) {
+            ctx.fillStyle = color;
+            const cw = Math.round(36 * scale);
+            const ch = Math.round(12 * scale);
+            ctx.fillRect(Math.round(x), Math.round(y), cw, ch);
+            ctx.fillRect(Math.round(x + 6 * scale), Math.round(y - 6 * scale), Math.round(22 * scale), Math.round(8 * scale));
+            ctx.fillStyle = 'rgba(0,0,0,0.08)';
+            ctx.fillRect(Math.round(x), Math.round(y + ch - 2), cw, 2);
+        }
+
+        function drawHill(x, baseY, hw, hh, mainCol, shadeCol) {
+            ctx.fillStyle = mainCol;
+            ctx.beginPath();
+            ctx.moveTo(x, baseY);
+            ctx.lineTo(x + hw * 0.35, baseY - hh);
+            ctx.lineTo(x + hw * 0.65, baseY - hh);
+            ctx.lineTo(x + hw, baseY);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = shadeCol;
+            ctx.fillRect(Math.round(x + hw * 0.45), Math.round(baseY - hh * 0.65), 4, 8);
+            ctx.fillRect(Math.round(x + hw * 0.55), Math.round(baseY - hh * 0.35), 4, 8);
+        }
+
+        function drawGround(th) {
+            const startCol = Math.floor(camX / 16) - 1;
+            const endCol = startCol + Math.ceil(W / 16) + 3;
+
+            for (let col = startCol; col < endCol; col++) {
+                const gx = col * 16;
+                ctx.fillStyle = th.groundTop;
+                ctx.fillRect(gx, GROUND_Y, 16, 10);
+                ctx.fillStyle = '#141418';
+                ctx.fillRect(gx, GROUND_Y, 16, 2);
+                ctx.fillRect(gx, GROUND_Y + 10, 16, 2);
+
+                ctx.fillStyle = th.groundBody;
+                ctx.fillRect(gx, GROUND_Y + 12, 16, H - GROUND_Y - 12);
+
+                ctx.strokeStyle = th.groundLine;
+                ctx.lineWidth = 1;
+                ctx.strokeRect(gx + 0.5, GROUND_Y + 12.5, 15, 15);
+                ctx.strokeRect(gx + 0.5, GROUND_Y + 28.5, 15, 15);
+                ctx.strokeRect(gx + 0.5, GROUND_Y + 44.5, 15, 15);
+                ctx.strokeRect(gx + 0.5, GROUND_Y + 60.5, 15, 24);
+            }
+        }
+
+        function drawBlock(b) {
+            const by = Math.round(b.y - b.lift);
+            const sz = 22;
+
+            ctx.fillStyle = b.bumped ? '#b08968' : '#ffd426';
+            ctx.fillRect(b.x, by, sz, sz);
+            ctx.strokeStyle = '#141418';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(b.x, by, sz, sz);
+
+            if (!b.bumped) {
+                ctx.fillStyle = '#fff59d';
+                ctx.fillRect(b.x + 2, by + 2, sz - 4, 2);
+                ctx.fillRect(b.x + 2, by + 2, 2, sz - 4);
+
+                ctx.fillStyle = '#141418';
+                ctx.font = '10px "Press Start 2P", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('?', b.x + sz / 2 + 1, by + 16);
+            }
+        }
+
+        function drawPipe(p) {
+            const pw = 30;
+            const topY = GROUND_Y - p.h;
+
+            ctx.fillStyle = '#43b047';
+            ctx.fillRect(p.x + 2, topY + 10, pw - 4, p.h - 10);
+            ctx.fillStyle = '#8ce88e';
+            ctx.fillRect(p.x + 5, topY + 10, 5, p.h - 10);
+            ctx.strokeStyle = '#141418';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(p.x + 2, topY + 10, pw - 4, p.h - 10);
+
+            ctx.fillStyle = '#43b047';
+            ctx.fillRect(p.x, topY, pw, 11);
+            ctx.fillStyle = '#8ce88e';
+            ctx.fillRect(p.x + 3, topY + 2, 6, 7);
+            ctx.strokeRect(p.x, topY, pw, 11);
+
+            drawPixelMatrix(ctx, PINK_HEART, p.x + 11, topY - 9, 1);
+        }
+
+        function drawFlagPole() {
+            ctx.fillStyle = '#8d99ae';
+            ctx.fillRect(POLE_X - 10, GROUND_Y - 12, 20, 12);
+            ctx.strokeStyle = '#141418';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(POLE_X - 10, GROUND_Y - 12, 20, 12);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(POLE_X - 2, POLE_TOP, 4, POLE_BOTTOM - POLE_TOP);
+            ctx.strokeStyle = '#141418';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(POLE_X - 2, POLE_TOP, 4, POLE_BOTTOM - POLE_TOP);
+
+            ctx.fillStyle = '#ffd426';
+            ctx.beginPath();
+            ctx.arc(POLE_X, POLE_TOP - 3, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            const fy = Math.round(flagCurrentY);
+            const fw = 104;
+            const fh = 38;
+
+            ctx.fillStyle = '#e52521';
+            ctx.fillRect(POLE_X + 2, fy, fw, fh);
+            ctx.fillStyle = '#141418';
+            ctx.fillRect(POLE_X + 2, fy + 13, fw, 12);
+
+            ctx.strokeStyle = '#141418';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(POLE_X + 2, fy, fw, fh);
+
+            ctx.strokeStyle = '#ff5ca8';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(POLE_X + 5, fy + 3, fw - 6, fh - 6);
+
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#ffa8d2';
+            ctx.font = '5px "Press Start 2P", monospace';
+            ctx.fillText('♥ SAVE THE DATE ♥', POLE_X + 2 + fw / 2, fy + 11);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '7px "Press Start 2P", monospace';
+            ctx.fillText(stateConfig.countdown, POLE_X + 2 + fw / 2, fy + 23);
+
+            ctx.fillStyle = '#ffd426';
+            ctx.font = '5px "Press Start 2P", monospace';
+            ctx.fillText(stateConfig.date, POLE_X + 2 + fw / 2, fy + 33);
+        }
+
+        function drawAltar(centerX, baseY) {
+            const aw = 72;
+            const ah = 76;
+            const lx = centerX - aw / 2;
+            const ty = baseY - ah;
+
+            ctx.fillStyle = '#ff5ca8';
+            ctx.fillRect(lx - 18, baseY - 3, aw + 46, 4);
+            ctx.fillStyle = '#e52521';
+            ctx.fillRect(lx - 18, baseY - 2, aw + 46, 2);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(lx, ty + 14, 8, ah - 14);
+            ctx.fillRect(lx + aw - 8, ty + 14, 8, ah - 14);
+
+            ctx.fillStyle = '#e52521';
+            ctx.fillRect(lx, ty + 28, 8, 6);
+            ctx.fillRect(lx + aw - 8, ty + 28, 8, 6);
+            ctx.fillStyle = '#141418';
+            ctx.fillRect(lx, ty + 34, 8, 5);
+            ctx.fillRect(lx + aw - 8, ty + 34, 8, 5);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(lx, ty + 8, aw, 10);
+
+            ctx.strokeStyle = '#141418';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(lx, ty + 8, aw, 10);
+            ctx.strokeRect(lx, ty + 18, 8, ah - 18);
+            ctx.strokeRect(lx + aw - 8, ty + 18, 8, ah - 18);
+
+            ctx.fillStyle = '#43b047';
+            ctx.fillRect(lx - 4, ty + 4, aw + 8, 8);
+            const flowerXs = [lx + 2, lx + 15, lx + 28, lx + 41, lx + 54, lx + aw - 8];
+            flowerXs.forEach((fx, idx) => {
+                ctx.fillStyle = idx % 2 === 0 ? '#ff5ca8' : '#ffa8d2';
+                ctx.fillRect(fx, ty + 2, 7, 7);
+                ctx.fillStyle = '#e52521';
+                ctx.fillRect(fx + 2, ty + 4, 3, 3);
+            });
+        }
+
+        function render() {
+            const th = THEMES[stateConfig.theme] || THEMES.classic;
+
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+            skyGrad.addColorStop(0, th.skyTop);
+            skyGrad.addColorStop(1, th.skyBottom);
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, W, H);
+
+            if (th.stars) {
+                for (const s of stars) {
+                    const sx = (s.x - camX * 0.15) % W;
+                    const drawX = sx < 0 ? sx + W : sx;
+                    const alpha = 0.5 + 0.5 * Math.sin(tick * 0.08 + s.phase);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                    ctx.fillRect(Math.round(drawX), Math.round(s.y), s.size, s.size);
+                }
+            }
+
+            for (const cl of clouds) {
+                const px = cl.x - camX * 0.25;
+                if (px > -80 && px < W + 80) {
+                    drawCloud(px, cl.y, cl.scale, th.cloud);
+                }
+            }
+
+            for (const bd of birds) {
+                const bx = bd.low ? (bd.x - camX) : (bd.x - camX * 0.35);
+                const by = bd.y + Math.sin(tick * 0.08 + bd.bobOffset) * (bd.low ? 2 : 4);
+                if (bx > -30 && bx < W + 30) {
+                    const birdFrame = Math.floor(tick / 9) % 2 === 0 ? BIRD_UP : BIRD_DOWN;
+                    drawPixelMatrix(ctx, birdFrame, bx, by, 1.5, false);
+                }
+            }
+
+            for (const h of hills) {
+                const hx = h.x - camX * 0.45;
+                if (hx > -140 && hx < W + 140) {
+                    drawHill(hx, GROUND_Y, h.w, h.h, th.hillMain, th.hillShade);
+                }
+            }
+
+            ctx.save();
+            ctx.translate(-Math.round(camX), 0);
+
+            drawAltar(ALTAR_X, GROUND_Y);
+
+            for (const b of blocks) {
+                drawBlock(b);
+            }
+
+            for (const p of pipes) {
+                drawPipe(p);
+            }
+
+            for (const kp of koopas) {
+                if (kp.stomped) {
+                    ctx.fillStyle = '#3ca842';
+                    ctx.fillRect(Math.round(kp.x + 2), Math.round(kp.y + 12), 16, 12);
+                    ctx.strokeStyle = '#141418';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(Math.round(kp.x + 2), Math.round(kp.y + 12), 16, 12);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(Math.round(kp.x + 3), Math.round(kp.y + 21), 14, 3);
+                } else {
+                    const koopaFrame = Math.floor(tick / 9) % 2 === 0 ? KOOPA_A : KOOPA_B;
+                    drawPixelMatrix(ctx, koopaFrame, kp.x - 2, kp.y - 6, 2, kp.dir > 0);
+                }
+            }
+
+            const bob = Math.sin(tick * 0.12) * 2.5;
+            for (const it of items) {
+                if (!it.taken) {
+                    if (it.kind === 'pink_heart') {
+                        drawPixelMatrix(ctx, PINK_HEART, it.x, it.y + bob, 2);
+                    } else if (it.kind === 'fla_heart') {
+                        drawPixelMatrix(ctx, FLA_HEART, it.x, it.y + bob, 2);
+                    } else if (it.kind === 'soccer') {
+                        drawPixelMatrix(ctx, SOCCER_BALL, it.x, it.y + bob, 2);
+                    } else {
+                        drawPixelMatrix(ctx, GOLD_RING, it.x, it.y + bob, 2);
+                    }
+                }
+            }
+
+            const brideBounce = (phase === 'celebrate' && Math.floor(celebrateTicks / 15) % 2 === 0) ? -2 : 0;
+            drawPixelMatrix(ctx, BRIDE_SPRITE_A, BRIDE_X, GROUND_Y - 40 + brideBounce, 2, true);
+
+            const isJersey = stateConfig.outfit === 'jersey';
+            let groomMatrix = isJersey ? GROOM_JERSEY_STAND : GROOM_SUIT_STAND;
+
+            if (phase === 'running' || phase === 'to_altar') {
+                if (!groom.grounded) {
+                    groomMatrix = isJersey ? GROOM_JERSEY_JUMP : GROOM_SUIT_JUMP;
+                } else {
+                    groomMatrix = Math.floor(tick / 6) % 2 === 0
+                        ? (isJersey ? GROOM_JERSEY_STEP_A : GROOM_SUIT_STEP_A)
+                        : (isJersey ? GROOM_JERSEY_STEP_B : GROOM_SUIT_STEP_B);
+                }
+            } else if (phase === 'flagpole') {
+                groomMatrix = isJersey ? GROOM_JERSEY_JUMP : GROOM_SUIT_JUMP;
+            }
+
+            const groomBounce = (phase === 'celebrate' && Math.floor(celebrateTicks / 15) % 2 === 1) ? -2 : 0;
+            drawPixelMatrix(ctx, groomMatrix, groom.x, groom.y + groomBounce, 2, false);
+
+            if (phase === 'celebrate') {
+                const hScale = 3 + (Math.floor(celebrateTicks / 14) % 2);
+                const centerCoupleX = (groom.x + BRIDE_X) / 2 + 16;
+                const hy = GROUND_Y - 68 - (hScale === 4 ? 3 : 0);
+                drawPixelMatrix(ctx, FLA_HEART, centerCoupleX - 18 - (9 * hScale) / 2, hy, hScale);
+                drawPixelMatrix(ctx, PINK_HEART, centerCoupleX + 18 - (9 * hScale) / 2, hy, hScale);
+            }
+
+            drawGround(th);
+            drawFlagPole();
+
+            for (const rk of rockets) {
+                const rx = Math.round(rk.x);
+                const ry = Math.round(rk.y);
+                ctx.fillStyle = '#141418';
+                ctx.fillRect(rx - 2, ry - 4, 5, 9);
+                ctx.fillStyle = rk.rType === 'most_awaited_pink' ? '#ff5ca8' : '#e52521';
+                ctx.fillRect(rx - 1, ry - 5, 3, 3);
+                ctx.fillStyle = '#ffd426';
+                ctx.fillRect(rx - 1, ry - 1, 3, 4);
+            }
+
+            for (const sp of sparks) {
+                if (sp.isPinkHeart) {
+                    drawPixelMatrix(ctx, PINK_HEART, sp.x - 4, sp.y - 4, 1);
+                } else {
+                    ctx.fillStyle = sp.color;
+                    ctx.fillRect(Math.round(sp.x), Math.round(sp.y), sp.size, sp.size);
+                }
+            }
+
+            for (const bl of burstLabels) {
+                const alpha = Math.min(1, bl.life / 22);
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.font = '7px "Press Start 2P", monospace';
+                ctx.textAlign = 'center';
+                const textW = ctx.measureText(bl.text).width;
+                const boxW = Math.min(W - 12, Math.ceil(textW + 12));
+                const boxH = 18;
+                const bx = Math.max(camX + 6, Math.min(camX + W - boxW - 6, Math.round(bl.x - boxW / 2)));
+                const by = Math.max(24, Math.round(bl.y - boxH / 2));
+
+                ctx.fillStyle = bl.badgeBg;
+                ctx.fillRect(bx, by, boxW, boxH);
+                ctx.strokeStyle = bl.rType === 'couple_fla_pink' ? '#e52521' : '#141418';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(bx, by, boxW, boxH);
+
+                ctx.fillStyle = bl.textColor;
+                ctx.fillText(bl.text, Math.round(bx + boxW / 2), Math.round(by + 12), boxW - 8);
+                ctx.restore();
+            }
+
+            for (const pop of popups) {
+                ctx.font = '7px "Press Start 2P", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#141418';
+                ctx.fillText(pop.text, Math.round(pop.x) + 1, Math.round(pop.y) + 1);
+                ctx.fillStyle = pop.color;
+                ctx.fillText(pop.text, Math.round(pop.x), Math.round(pop.y));
+            }
+
+            ctx.restore();
+        }
+
+        /**
+         * ====================================================================
+         * 6. CONTROLES, CONFIGURAÇÕES E LOOP PRINCIPAL
+         * ====================================================================
+         */
+        function beginRun(mode) {
+            sound.ensureContext();
+            sound.collect();
+            stateConfig.mode = mode;
+            buildStage();
+            phase = 'running';
+
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('finalCard').classList.add('hidden');
+
+            if (mode === 'play') {
+                document.getElementById('playHint').classList.remove('hidden');
+                document.getElementById('top-hud').classList.remove('opacity-0', 'pointer-events-none');
+            } else {
+                document.getElementById('playHint').classList.add('hidden');
+                document.getElementById('top-hud').classList.add('opacity-0', 'pointer-events-none');
+            }
+        }
+
+        function saveConfig() {
+            const gVal = document.getElementById('groomInput').value.trim();
+            const bVal = document.getElementById('brideInput').value.trim();
+            const dVal = document.getElementById('dateInput').value.trim();
+            const cVal = document.getElementById('countdownInput').value.trim();
+            const mVal = document.getElementById('messageInput').value.trim();
+            const oVal = document.getElementById('outfitSelect').value;
+            const tVal = document.getElementById('themeSelect').value;
+
+            if (gVal) stateConfig.groom = gVal.toUpperCase();
+            if (bVal) stateConfig.bride = bVal.toUpperCase();
+            stateConfig.coupleTitle = `${stateConfig.groom} & ${stateConfig.bride}`;
+            if (dVal) stateConfig.date = dVal.toUpperCase();
+            if (cVal) stateConfig.countdown = cVal.toUpperCase();
+            if (mVal) stateConfig.message = mVal;
+            stateConfig.outfit = oVal;
+            stateConfig.theme = tVal;
+
+            document.getElementById('startCoupleTitle').textContent = stateConfig.coupleTitle;
+            drawPreviews();
+        }
+
+        function loop() {
+            update();
+            render();
+            requestAnimationFrame(loop);
+        }
+
+        document.getElementById('autoRecordBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            beginRun('auto');
+        });
+
+        document.getElementById('playModeBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            beginRun('play');
+        });
+
+        document.getElementById('replayBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            beginRun(stateConfig.mode);
+        });
+
+        const soundBtn = document.getElementById('soundToggleBtn');
+        soundBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sound.muted = !sound.muted;
+            soundBtn.textContent = sound.muted ? '🔇' : '🔊';
+            if (!sound.muted) sound.collect();
+        });
+
+        const settingsModal = document.getElementById('settingsModal');
+        document.getElementById('settingsBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            settingsModal.classList.remove('hidden');
+        });
+
+        document.getElementById('closeSettingsBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            settingsModal.classList.add('hidden');
+        });
+
+        document.getElementById('saveSettingsBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            saveConfig();
+            settingsModal.classList.add('hidden');
+            sound.collect();
+        });
+
+        document.getElementById('phone-frame').addEventListener('pointerdown', (e) => {
+            if (e.target.closest('button') || e.target.closest('#settingsModal') || e.target.closest('#startScreen')) {
+                return;
+            }
+            if (phase === 'running' && stateConfig.mode === 'play') {
+                triggerJump();
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                if (phase === 'running' && stateConfig.mode === 'play') {
+                    e.preventDefault();
+                    triggerJump();
+                }
+            }
+        });
+
+        window.onload = function () {
+            canvas.width = W;
+            canvas.height = H;
+            drawPreviews();
+            buildStage();
+            loop();
+        };
+    </script>
+</body>
+</html>
